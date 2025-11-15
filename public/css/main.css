@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ===========================
+   VARIABLES
+   =========================== */
+:root {
+    --clr-main: #0E6E63;
+    --clr-main-light: #abeee8;
+    --clr-orange: #FF7A59;
+    --clr-green: #7AC943;
+    --clr-white: #ffffff;
+    --clr-gray: #c6cbd1;
+    --bg-light: #f5f7fa;
+}
+
+/* ===========================
+   RESET
+   =========================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+ul {
+    list-style-type: none;
+}
+
+a {
+    text-decoration: none;
+    color: var(--clr-main);
+}
+
+/* ===========================
+   BODY
+   =========================== */
+body {
+    background: var(--bg-light);
+    color: #333;
+}
+
+/* ===========================
+   HEADER (PÁGINA PRIVADA)
+   =========================== */
+header {
+    background: var(--clr-white);
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+header button {
+    border-radius: 6px;
+}
+
+/* ===========================
+   FORMULARIOS GENERALES
+   =========================== */
+form label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+form .form-control {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+form .form-control:focus {
+    border-color: var(--clr-main);
+    box-shadow: 0 0 8px rgba(14, 110, 99, 0.3);
+}
+
+form .mb-3 {
+    margin-bottom: 18px;
+}
+
+form .form-check {
+    display: flex;
+    align-items: center;
+}
+
+form .form-check-input {
+    margin-right: 10px;
+}
+
+/* ===========================
+   BOTONES
+   =========================== */
+button.btn-primary {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    background: var(--clr-main);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+button.btn-primary:hover {
+    background: var(--clr-main-light);
+    color: #000;
+    transform: translateY(-2px);
+}
+
+/* ===========================
+   LOGIN / REGISTRO
+   =========================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    background: var(--clr-white);
+    border-radius: 12px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-card h2 {
+    font-weight: 700;
+    color: var(--clr-main);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.text-center {
+    text-align: center;
+}
