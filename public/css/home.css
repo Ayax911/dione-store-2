@@ -1,0 +1,179 @@
+ .hero-section {
+        background: linear-gradient(135deg, var(--clr-main) 0%, var(--clr-green) 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+    }
+
+    .hero-section h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .search-container {
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        padding: 0 1rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 2rem;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--clr-orange);
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+    }
+
+    .filter-btn {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 2rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        background-color: var(--clr-orange);
+        color: white;
+        border-color: var(--clr-orange);
+        transform: translateY(-2px);
+    }
+
+    .titulo-principal {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--clr-main);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .contenedor-productos {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .producto {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .producto:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+
+    .producto-imagen {
+        width: 100%;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .producto:hover .producto-imagen {
+        transform: scale(1.05);
+    }
+
+    .producto-detalles {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
+    }
+
+    .producto-titulo {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--clr-main);
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .producto-precio {
+        font-size: 1.5rem;
+        color: var(--clr-orange);
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .producto-agregar {
+        background-color: var(--clr-orange);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-block;
+        margin-top: auto;
+    }
+
+    .producto-agregar:hover {
+        background-color: var(--clr-main);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 1rem;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: var(--clr-main);
+        opacity: 0.5;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 1.8rem;
+        }
+
+        .contenedor-productos {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .titulo-principal {
+            font-size: 1.5rem;
+        }
+    }
