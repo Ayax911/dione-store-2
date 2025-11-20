@@ -4,164 +4,101 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pedido;
-use App\Models\User;
-use Illuminate\Support\Facades\Validator;
+use App\Models\DetallePedido;
+use Illuminate\Support\Facades\Auth;
 
 class PedidoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mostrar historial de compras del usuario
      */
-    public function index()
+    public function misCompras()
     {
-        $pedidos = Pedido::with('User', 'detallesPedidos', 'carrito')->get();
+        $usuarioId = Auth::id();
         
-        return view('pedidos.index', compact('pedidos'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $Users = User::all();
+        // Pedidos donde el usuario ES EL COMPRADOR
+        $compras = Pedido::with([
+                'detallesPedidos.prenda.imgsPrendas', 
+                'detallesPedidos.prenda.usuario',
+                'detallesPedidos.prenda.categoria',
+                'detallesPedidos.prenda.condicion'
+            ])
+            ->where('usuario_id', $usuarioId)
+            ->orderBy('fecha', 'desc')
+            ->get();
         
-        return view('pedidos.create', compact('Users'));
+        return view('mis-compras', compact('compras'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Mostrar historial de ventas del usuario (con filtros)
      */
-    public function store(Request $request)
+    public function misVentas(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'fecha' => 'nullable|date',
-            'total_pedido' => 'required|numeric|min:0',
-            'User_id' => 'required|exists:Users,id'
-        ]);
-
-        if ($validator->fails()) {
-
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+        $usuarioId = Auth::id();
+        
+        // Query base - Pedidos donde el usuario ES EL VENDEDOR
+        $query = DetallePedido::with([
+                'pedido.usuario', 
+                'prenda.imgsPrendas', 
+                'prenda.categoria',
+                'prenda.condicion'
+            ])
+            ->whereHas('prenda', function($q) use ($usuarioId) {
+                $q->where('usuario_id', $usuarioId);
+            });
+        
+        // Ordenamiento
+        switch ($request->get('orden', 'reciente')) {
+            case 'antiguo':
+                $query->oldest('created_at');
+                break;
+            case 'mayor_monto':
+                $query->orderBy('subtotal', 'desc');
+                break;
+            case 'menor_monto':
+                $query->orderBy('subtotal', 'asc');
+                break;
+            default: // 'reciente'
+                $query->latest('created_at');
+                break;
         }
-
-        try {
-
-            $pedido = Pedido::create($request->all());
-
-            session()->flash('success', 'Pedido creado exitosamente');
-
-            return redirect()->route('pedidos.index');
-
-        } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al crear el pedido: ' . $e->getMessage());
-
-            return redirect()->back()->withInput();
-        }
+        
+        $ventas = $query->get()->groupBy('pedido_id');
+        
+        return view('mis-ventas', compact('ventas'));
     }
 
     /**
-     * Display the specified resource.
+     * Ver detalle de un pedido específico
      */
-    public function show(int $id)
+    public function show($id)
     {
-        $pedido = Pedido::with('User', 'detallesPedidos', 'carrito')->find($id);
+        $pedido = Pedido::with([
+                'detallesPedidos.prenda.imgsPrendas', 
+                'detallesPedidos.prenda.usuario',
+                'detallesPedidos.prenda.categoria',
+                'detallesPedidos.prenda.condicion',
+                'usuario'
+            ])
+            ->find($id);
 
         if (!$pedido) {
-
-            session()->flash('error', 'Pedido no encontrado.');
-            return redirect()->route('pedidos.index');
+            return redirect()->route('home')->with('error', 'Pedido no encontrado.');
         }
 
-        return view('pedidos.show', compact('pedido'));
-    }
+        $usuarioId = Auth::id();
+        
+        // Verificar que el usuario sea el comprador o uno de los vendedores
+        $esComprador = $pedido->usuario_id === $usuarioId;
+        $esVendedor = $pedido->detallesPedidos->contains(function($detalle) use ($usuarioId) {
+            return $detalle->prenda && $detalle->prenda->usuario_id === $usuarioId;
+        });
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(int $id)
-    {
-        $pedido = Pedido::find($id);
-
-        if (!$pedido) {
-            session()->flash('error', 'Pedido no encontrado.');
-            return redirect()->route('pedidos.index');
+        if (!$esComprador && !$esVendedor) {
+            return redirect()->route('home')->with('error', 'No tienes permiso para ver este pedido.');
         }
 
-        $Users = User::all();
-
-        return view('pedidos.edit', compact('pedido', 'Users'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, int $id)
-    {
-        $pedido = Pedido::find($id);
-
-        if (!$pedido) {
-            session()->flash('error', 'Pedido no encontrado.');
-            return redirect()->route('pedidos.index');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'fecha' => 'nullable|date',
-            'total_pedido' => 'sometimes|numeric|min:0',
-            'User_id' => 'sometimes|exists:Users,id'
-        ]);
-
-        if ($validator->fails()) {
-            session()->flash('error', 'Corrija los errores en el formulario.');
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-
-            $pedido->update($request->all());
-
-            session()->flash('success', 'Pedido actualizado exitosamente.');
-
-            return redirect()->route('pedidos.show', $pedido->id);
-
-        } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al actualizar el pedido: ' . $e->getMessage());
-
-            return redirect()->back()->withInput();
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        $pedido = Pedido::find($id);
-
-        if (!$pedido) {
-            session()->flash('error', 'Pedido no encontrado.');
-            return redirect()->route('pedidos.index');
-        }
-
-        try {
-
-            $pedido->delete();
-
-            session()->flash('success', 'Pedido eliminado exitosamente.');
-
-            return redirect()->route('pedidos.index');
-
-        } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al eliminar el pedido: ' . $e->getMessage());
-
-            return redirect()->back();
-        }
+        return view('detalle-pedido', compact('pedido', 'esComprador', 'esVendedor'));
     }
 }

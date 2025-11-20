@@ -23,7 +23,7 @@ class Pedido extends Model
 
     ];
 
-    public $timestamps = false;
+    
 
     public function usuario(){
         return $this->belongsTo(User::class, 'usuario_id');

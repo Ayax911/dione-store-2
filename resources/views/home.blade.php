@@ -1,3 +1,33 @@
+<!--
+        Archivo: resources/views/home.blade.php
+        Propósito: Mostrar el catálogo (home) de Dione Store.
+
+        Resumen:
+        - Muestra una sección "hero", barra de búsqueda, filtros por categoría,
+            listado de prendas y estados vacíos/alertas.
+        - Renderiza la cantidad de productos y soporta búsquedas y filtrado por categoría.
+
+        Variables esperadas (desde el controlador):
+        - $prendas : Collection|array de modelos `Prenda` con relaciones opcionales:
+                ->imgsPrendas, ->categoria, ->condicion
+        - $categorias : Collection|array de modelos `Categoria`
+
+        Parámetros de petición (query string):
+        - buscar : texto para filtrar por título/descripcion
+        - categoria : id de la categoría para filtrar
+
+        Rutas usadas desde la vista:
+        - route('home')
+        - route('prendas.create') (solo usuarios autenticados ven el botón)
+        - route('prendas.show', $prenda->id)
+
+        Notas para desarrolladores:
+        - Las imágenes se muestran con `asset('storage/...')` y hay un placeholder si falta.
+        - La vista extiende `layouts.app` y define las secciones: `title`, `styles`, `content`, `scripts`.
+        - Mensajes flash `session('success')` y `session('error')` se muestran y se autoocultan mediante JS.
+        - Estilos adicionales cargados desde `public/css/home.css`.
+-->
+
 @extends('layouts.app')
 
 @section('title', 'Catálogo - Dione Store')

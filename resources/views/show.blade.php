@@ -117,25 +117,6 @@
             </div>
         </div>
 
-        <!-- Huella de Carbono -->
-        @if($prenda->huellasCarbonos->isNotEmpty())
-        @php
-            $huella = $prenda->huellasCarbonos->first();
-            $reduccion = (($huella->huella_nueva - $huella->huella_reusada) / $huella->huella_nueva) * 100;
-        @endphp
-        <div class="huella-carbono">
-            <i class="bi bi-leaf-fill"></i>
-            <h4>🌍 Impacto Ambiental Positivo</h4>
-            <div style="font-size: 1.1rem; margin-bottom: 1rem;">
-                <div><strong>Nueva:</strong> {{ number_format($huella->huella_nueva, 2) }} kg CO₂</div>
-                <div><strong>Reusada:</strong> {{ number_format($huella->huella_reusada, 2) }} kg CO₂</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 0.5rem;">
-                <strong style="font-size: 1.3rem;">¡Reduces {{ number_format($reduccion, 1) }}% de emisiones!</strong>
-            </div>
-        </div>
-        @endif
-
         <!-- Botón Agregar al Carrito o Acciones de Propietario -->
         @auth
             @if($prenda->usuario_id !== Auth::id())
@@ -173,6 +154,11 @@
         @endauth
     </div>
 </div>
+
+{{-- ✅ COMPONENTE DE HUELLA DE CARBONO --}}
+@if(isset($huella))
+    @include('components.huella-carbono', ['huella' => $huella, 'prenda' => $prenda])
+@endif
 
 <!-- Productos Similares -->
 @if(isset($productosSimilares) && $productosSimilares->isNotEmpty())

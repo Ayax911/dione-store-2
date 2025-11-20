@@ -1,0 +1,103 @@
+ .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, var(--clr-main) 0%, #095850 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .stat-card i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .stat-card.orange {
+        background: linear-gradient(135deg, var(--clr-orange) 0%, #ff8c42 100%);
+    }
+
+    .stat-card.green {
+        background: linear-gradient(135deg, var(--clr-green) 0%, #5a9e2b 100%);
+    }
+
+    .empty-state-custom {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .empty-state-custom i {
+        font-size: 6rem;
+        color: var(--clr-main);
+        opacity: 0.3;
+        margin-bottom: 2rem;
+    }
+
+    .producto-acciones {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .producto-acciones .btn {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border-radius: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    .producto-acciones .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Badges - igual que home.blade.php */
+    .badge-nuevo {
+        background: linear-gradient(135deg, var(--clr-orange) 0%, #ff8c42 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-usado {
+        background: linear-gradient(135deg, var(--clr-green) 0%, #5a9e2b 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        display: inline-block;
+    }

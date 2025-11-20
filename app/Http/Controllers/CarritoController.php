@@ -3,165 +3,187 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Carrito;
+use App\Models\Prenda;
 use App\Models\Pedido;
-use Illuminate\Support\Facades\Validator;
+use App\Models\DetallePedido;
+use Illuminate\Support\Facades\Auth;
 
 class CarritoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mostrar el carrito de compras
      */
     public function index()
     {
-        $carritos = Carrito::with('detalles', 'pedido')->get();
+        $carrito = session()->get('carrito', []);
+        $total = 0;
         
-        return view('carritos.index', compact('carritos'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $pedidos = Pedido::all();
+        // Calcular total
+        foreach ($carrito as $item) {
+            $total += $item['precio'] * $item['cantidad'];
+        }
         
-        return view('carritos.create', compact('pedidos'));
+        return view('carrito', compact('carrito', 'total'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Agregar producto al carrito (SESSION)
      */
-    public function store(Request $request)
+    public function agregar($prenda_id)
     {
-        $validator = Validator::make($request->all(), [
-            'fecha' => 'nullable|date',
-            'total_carrito' => 'required|numeric|min:0',
-            'pedido_id' => 'nullable|exists:pedidos,id'
-        ]);
+        $prenda = Prenda::with(['categoria', 'imgsPrendas', 'usuario'])->find($prenda_id);
+        
+        if (!$prenda) {
+            return redirect()->back()->with('error', 'Prenda no encontrada.');
+        }
 
-        if ($validator->fails()) {
+        // Validar que no sea su propia prenda
+        $usuarioId = Auth::id();
+        if ($prenda->usuario_id === $usuarioId) {
+            return redirect()->back()->with('error', 'No puedes comprar tu propia prenda.');
+        }
 
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+        // Obtener carrito de la sesión
+        $carrito = session()->get('carrito', []);
+
+        // Si la prenda ya está en el carrito, incrementar cantidad
+        if (isset($carrito[$prenda_id])) {
+            $carrito[$prenda_id]['cantidad']++;
+        } else {
+            // Agregar nueva prenda al carrito
+            $carrito[$prenda_id] = [
+                'id' => $prenda->id,
+                'titulo' => $prenda->titulo,
+                'precio' => $prenda->precio,
+                'cantidad' => 1,
+                'imagen' => $prenda->imgsPrendas->first()->direccion_imagen ?? null,
+                'categoria' => $prenda->categoria->tipo_prenda ?? 'Sin categoría',
+                'talla' => $prenda->talla,
+                'vendedor_id' => $prenda->usuario_id,
+                'vendedor_nombre' => $prenda->usuario->name ?? 'Usuario'
+            ];
+        }
+
+        // Guardar en sesión
+        session()->put('carrito', $carrito);
+        
+        // Actualizar contador
+        $this->actualizarContador();
+
+        return redirect()->back()->with('success', '¡Prenda agregada al carrito!');
+    }
+
+    /**
+     * Actualizar cantidad de un producto
+     */
+    public function actualizar(Request $request, $prenda_id)
+    {
+        $carrito = session()->get('carrito', []);
+        
+        if (isset($carrito[$prenda_id])) {
+            $cantidad = max(1, intval($request->cantidad));
+            $carrito[$prenda_id]['cantidad'] = $cantidad;
+            session()->put('carrito', $carrito);
+            $this->actualizarContador();
+            
+            return redirect()->back()->with('success', 'Cantidad actualizada.');
+        }
+
+        return redirect()->back()->with('error', 'Prenda no encontrada en el carrito.');
+    }
+
+    /**
+     * Eliminar un producto del carrito
+     */
+    public function eliminar($prenda_id)
+    {
+        $carrito = session()->get('carrito', []);
+
+        if (isset($carrito[$prenda_id])) {
+            unset($carrito[$prenda_id]);
+            session()->put('carrito', $carrito);
+            $this->actualizarContador();
+            
+            return redirect()->back()->with('success', 'Prenda eliminada del carrito.');
+        }
+
+        return redirect()->back()->with('error', 'Prenda no encontrada en el carrito.');
+    }
+
+    /**
+     * Vaciar todo el carrito
+     */
+    public function vaciar()
+    {
+        session()->forget('carrito');
+        session()->put('carrito_count', 0);
+        
+        return redirect()->back()->with('success', 'Carrito vaciado.');
+    }
+
+    /**
+     * Procesar la compra (Checkout)
+     * Convierte el carrito de SESSION a PEDIDO en la BD
+     */
+    public function checkout()
+    {
+        $carritoSession = session()->get('carrito', []);
+
+        if (empty($carritoSession)) {
+            return redirect()->route('carrito.index')->with('error', 'El carrito está vacío.');
         }
 
         try {
+            $usuarioId = Auth::id();
+            
+            // Calcular total
+            $total = 0;
+            foreach ($carritoSession as $item) {
+                $total += $item['precio'] * $item['cantidad'];
+            }
 
-            $carrito = Carrito::create($request->all());
+            // Crear el pedido
+            $pedido = Pedido::create([
+                'fecha' => now(),
+                'total_pedido' => $total,
+                'usuario_id' => $usuarioId
+            ]);
 
-            session()->flash('success', 'Carrito creado exitosamente');
+            // Guardar los detalles del pedido
+            foreach ($carritoSession as $prenda_id => $item) {
+                DetallePedido::create([
+                    'cantidad' => $item['cantidad'],
+                    'subtotal' => $item['precio'] * $item['cantidad'],
+                    'prenda_id' => $prenda_id,
+                    'pedido_id' => $pedido->id
+                ]);
+            }
 
-            return redirect()->route('carritos.index');
+            // Vaciar carrito de la sesión
+            session()->forget('carrito');
+            session()->put('carrito_count', 0);
 
-        } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al crear el carrito: ' . $e->getMessage());
-
-            return redirect()->back()->withInput();
-        }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(int $id)
-    {
-        $carrito = Carrito::with('detalles', 'pedido')->find($id);
-
-        if (!$carrito) {
-
-            session()->flash('error', 'Carrito no encontrado.');
-            return redirect()->route('carritos.index');
-        }
-
-        return view('carritos.show', compact('carrito'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(int $id)
-    {
-        $carrito = Carrito::find($id);
-
-        if (!$carrito) {
-            session()->flash('error', 'Carrito no encontrado.');
-            return redirect()->route('carritos.index');
-        }
-
-        $pedidos = Pedido::all();
-
-        return view('carritos.edit', compact('carrito', 'pedidos'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, int $id)
-    {
-        $carrito = Carrito::find($id);
-
-        if (!$carrito) {
-            session()->flash('error', 'Carrito no encontrado.');
-            return redirect()->route('carritos.index');
-        }
-
-        $validator = Validator::make($request->all(), [
-            'fecha' => 'nullable|date',
-            'total_carrito' => 'sometimes|numeric|min:0',
-            'pedido_id' => 'nullable|exists:pedidos,id'
-        ]);
-
-        if ($validator->fails()) {
-            session()->flash('error', 'Corrija los errores en el formulario.');
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-
-            $carrito->update($request->all());
-
-            session()->flash('success', 'Carrito actualizado exitosamente.');
-
-            return redirect()->route('carritos.show', $carrito->id);
+            // Redirigir a mis compras
+            return redirect()->route('pedidos.misCompras')
+                ->with('success', '¡Compra realizada con éxito! Total: $' . number_format($total, 0, ',', '.') . ' COP');
 
         } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al actualizar el carrito: ' . $e->getMessage());
-
-            return redirect()->back()->withInput();
+            return redirect()->back()->with('error', 'Error al procesar la compra: ' . $e->getMessage());
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualizar contador del carrito en sesión
      */
-    public function destroy($id)
+    private function actualizarContador()
     {
-        $carrito = Carrito::find($id);
-
-        if (!$carrito) {
-            session()->flash('error', 'Carrito no encontrado.');
-            return redirect()->route('carritos.index');
+        $carrito = session()->get('carrito', []);
+        $count = 0;
+        
+        foreach ($carrito as $item) {
+            $count += $item['cantidad'];
         }
-
-        try {
-
-            $carrito->delete();
-
-            session()->flash('success', 'Carrito eliminado exitosamente.');
-
-            return redirect()->route('carritos.index');
-
-        } catch (\Exception $e) {
-
-            session()->flash('error', 'Error al eliminar el carrito: ' . $e->getMessage());
-
-            return redirect()->back();
-        }
+        
+        session()->put('carrito_count', $count);
     }
 }

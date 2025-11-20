@@ -5,22 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class ImgPrenda extends Model
+class ImgsPrendas extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
-    protected $table = 'img_prendas';
+    protected $table = 'imgs_prendas'; 
 
     protected $fillable = [
-
         'direccion_imagen',
         'prenda_id'
-
     ];
 
     public $timestamps = false;
 
-    public function prenda(){
-    return $this->belongsTo(Prenda::class, 'prenda_id');
+    /**
+     * Relación con Prenda
+     */
+    public function prenda()
+    {
+        return $this->belongsTo(Prenda::class, 'prenda_id');
     }
 }
