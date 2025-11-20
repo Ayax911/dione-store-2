@@ -1,36 +1,3 @@
-<!--
-        Archivo: resources/views/show.blade.php
-        Propósito: Mostrar la página de detalle de una prenda.
-
-        Resumen:
-        - Muestra galería de imágenes (imagen principal + thumbnails), información detallada
-            de la prenda (precio, talla, material, descripción), vendedor y huella de carbono.
-        - Permite acciones según el usuario: agregar al carrito, editar/eliminar si es el propietario.
-        - Muestra productos similares si están disponibles.
-
-        Variables esperadas (desde el controlador):
-        - $prenda : instancia del modelo `Prenda` con relaciones opcionales:
-                ->imgsPrendas, ->categoria, ->condicion, ->usuario, ->huellasCarbonos
-        - $productosSimilares (opcional): Collection de `Prenda` para la sección "También te puede interesar"
-
-        Parámetros/estados:
-        - Mensajes flash: `session('success')`, `session('info')`.
-        - Permisos: la vista usa `@auth` y `Auth::id()` para condicionar acciones.
-
-        Rutas usadas desde la vista:
-        - route('home')
-        - route('prendas.show', $prenda->id)
-        - route('prendas.edit', $prenda->id)
-        - route('prendas.destroy', $prenda->id)
-        - route('carrito.agregar', $prenda->id)
-        - route('login')
-
-        Notas para desarrolladores:
-        - Las imágenes se cargan desde `storage` con `asset('storage/...')` y hay placeholders si faltan.
-        - El cálculo de reducción de huella asume que `huella_nueva` y `huella_reusada` están disponibles.
-        - La vista depende de los estilos en `css/show.css` y usa Bootstrap Icons.
--->
-
 @extends('layouts.app')
 
 @section('title', $prenda->titulo . ' - Dione Store')
@@ -150,25 +117,6 @@
             </div>
         </div>
 
-        <!-- Huella de Carbono -->
-        @if($prenda->huellasCarbonos->isNotEmpty())
-        @php
-            $huella = $prenda->huellasCarbonos->first();
-            $reduccion = (($huella->huella_nueva - $huella->huella_reusada) / $huella->huella_nueva) * 100;
-        @endphp
-        <div class="huella-carbono">
-            <i class="bi bi-leaf-fill"></i>
-            <h4> Impacto Ambiental Positivo</h4>
-            <div style="font-size: 1.1rem; margin-bottom: 1rem;">
-                <div><strong>Nueva:</strong> {{ number_format($huella->huella_nueva, 2) }} kg CO₂</div>
-                <div><strong>Reusada:</strong> {{ number_format($huella->huella_reusada, 2) }} kg CO₂</div>
-            </div>
-            <div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 0.5rem;">
-                <strong style="font-size: 1.3rem;">¡Reduces {{ number_format($reduccion, 1) }}% de emisiones!</strong>
-            </div>
-        </div>
-        @endif
-
         <!-- Botón Agregar al Carrito o Acciones de Propietario -->
         @auth
             @if($prenda->usuario_id !== Auth::id())
@@ -206,6 +154,11 @@
         @endauth
     </div>
 </div>
+
+{{-- ✅ COMPONENTE DE HUELLA DE CARBONO --}}
+@if(isset($huella))
+    @include('components.huella-carbono', ['huella' => $huella, 'prenda' => $prenda])
+@endif
 
 <!-- Productos Similares -->
 @if(isset($productosSimilares) && $productosSimilares->isNotEmpty())

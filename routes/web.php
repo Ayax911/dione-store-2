@@ -8,6 +8,10 @@ use App\Http\Controllers\PedidoController;
 
 // Redirigir raíz al login
 Route::get('/', function () {
+    return view('login');   
+})->name('inicio');
+
+Route::get('/', function () {
     return view('login');
 })->name('inicio');
 
