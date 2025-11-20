@@ -13,16 +13,26 @@ return new class extends Migration
     {
         Schema::create('prendas', function (Blueprint $table) {
             $table->id();
-            $table->string('descripcion',500);
-            $table->string('talla',10);
-            $table->decimal('precio', 8, 2);
-            $table->string('material',50);
-            $table->string('titulo',50);
+            
+            
+            $table->text('descripcion');
+            
+            $table->string('talla', 10);
+            
+            
+            $table->decimal('precio', 10, 2);
+            
+            $table->string('material', 50);
+            $table->string('titulo', 50);
 
-            $table->unsignedBigInteger('categoria_id');
-            $table->foreign('categoria_id')->references('id')->on('categorias')->onDelete('cascade');
-            $table->unsignedBigInteger('usuario_id');
-            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
+            // Llaves foráneas
+            $table->foreignId('categoria_id')
+                  ->constrained('categorias')
+                  ->onDelete('cascade');
+                  
+            $table->foreignId('usuario_id')
+                  ->constrained('users')
+                  ->onDelete('cascade');
 
             $table->timestamps();
         });
