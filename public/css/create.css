@@ -1,0 +1,229 @@
+/* create.css - Estilos para crear y editar prendas */
+
+.form-container {
+    background: white;
+    padding: 3rem;
+    border-radius: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.form-label {
+    color: var(--clr-main);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--clr-orange);
+    box-shadow: 0 0 0 0.2rem rgba(255, 122, 89, 0.25);
+}
+
+.form-control::placeholder {
+    color: #adb5bd;
+}
+
+/* Upload de imágenes */
+.file-upload-area {
+    border: 3px dashed var(--clr-main);
+    border-radius: 1.5rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: #f8f9fa;
+}
+
+.file-upload-area:hover {
+    border-color: var(--clr-orange);
+    background-color: #fff;
+    transform: translateY(-2px);
+}
+
+.file-upload-area i {
+    font-size: 4rem;
+    color: var(--clr-main);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.file-upload-area p {
+    font-size: 1.1rem;
+    color: var(--clr-main);
+    margin-bottom: 0.5rem;
+}
+
+/* Preview de imágenes */
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 3px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+}
+
+.preview-item:hover {
+    transform: scale(1.05);
+    border-color: var(--clr-orange);
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-item .btn-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: rgba(214, 48, 49, 0.95);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.preview-item .btn-remove:hover {
+    background-color: #d63031;
+    transform: scale(1.1);
+}
+
+.preview-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: white;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+/* Imágenes actuales (para edit) */
+.imagenes-actuales {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 1rem;
+}
+
+.imagen-actual-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 3px solid var(--clr-green);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.imagen-actual-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-remove-actual {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: rgba(214, 48, 49, 0.95);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.btn-remove-actual:hover {
+    background-color: #d63031;
+    transform: scale(1.1);
+}
+
+/* Breadcrumb personalizado */
+.breadcrumb-nav {
+    font-size: 0.95rem;
+    color: #6c757d;
+}
+
+.breadcrumb-nav a {
+    color: var(--clr-main);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.breadcrumb-nav a:hover {
+    color: var(--clr-orange);
+    text-decoration: underline;
+}
+
+/* Contador de caracteres */
+#char-count {
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 2rem 1.5rem;
+    }
+
+    .preview-container,
+    .imagenes-actuales {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .file-upload-area {
+        padding: 2rem 1rem;
+    }
+
+    .file-upload-area i {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-container {
+        padding: 1.5rem 1rem;
+        border-radius: 1rem;
+    }
+
+    .preview-container,
+    .imagenes-actuales {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

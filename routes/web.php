@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PrendaController;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\PedidoController;
 
 // Redirigir raíz al login
 Route::get('/', function () {
@@ -30,16 +32,19 @@ Route::middleware('auth')->group(function () {
     Route::put('/prendas/{id}', [PrendaController::class, 'update'])->name('prendas.update');
     Route::delete('/prendas/{id}', [PrendaController::class, 'destroy'])->name('prendas.destroy');
     
-    // Rutas del carrito (placeholder temporal)
-    Route::get('/carrito', function() {
-        return redirect()->route('home')->with('info', 'Carrito en desarrollo');
-    })->name('carrito.index');
+    // Mis publicaciones
+    Route::get('/mis-publicaciones', [PrendaController::class, 'misPublicaciones'])->name('mis-publicaciones');
     
-    Route::post('/carrito/agregar/{id}', function($id) {
-        return redirect()->back()->with('info', 'Funcionalidad de carrito en desarrollo');
-    })->name('carrito.agregar');
+    // Carrito
+    Route::post('/carrito/agregar/{prenda}', [CarritoController::class, 'agregar'])->name('carrito.agregar');
+    Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
+    Route::patch('/carrito/{id}', [CarritoController::class, 'actualizar'])->name('carrito.actualizar');
+    Route::delete('/carrito/{id}', [CarritoController::class, 'eliminar'])->name('carrito.eliminar');
+    Route::post('/carrito/vaciar', [CarritoController::class, 'vaciar'])->name('carrito.vaciar');
+    Route::post('/carrito/checkout', [CarritoController::class, 'checkout'])->name('carrito.checkout');
     
-    Route::delete('/carrito/eliminar/{id}', function($id) {
-        return redirect()->back()->with('info', 'Funcionalidad de carrito en desarrollo');
-    })->name('carrito.eliminar');
+    // Pedidos (Ver compras y ventas)
+    Route::get('/mis-compras', [PedidoController::class, 'misCompras'])->name('pedidos.misCompras');
+    Route::get('/mis-ventas', [PedidoController::class, 'misVentas'])->name('pedidos.misVentas');
+    Route::get('/pedido/{id}', [PedidoController::class, 'show'])->name('pedidos.show');
 });

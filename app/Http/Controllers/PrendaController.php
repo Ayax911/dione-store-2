@@ -110,7 +110,7 @@ class PrendaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(int $id)
+    public function show($id)
     {
         $prenda = Prenda::with(['usuario', 'categoria', 'imgsPrendas', 'condicion', 'huellasCarbonos'])->find($id);
 
@@ -134,7 +134,7 @@ class PrendaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(int $id)
+    public function edit($id)
     {
         $prenda = Prenda::with('imgsPrendas')->find($id);
 
@@ -249,5 +249,20 @@ class PrendaController extends Controller
             session()->flash('error', 'Error al eliminar la prenda: ' . $e->getMessage());
             return redirect()->back();
         }
+    }
+
+    public function misPublicaciones(Request $request)
+    {
+        $usuarioId = Auth::id();
+        $categorias = Categoria::all();
+        
+        $query = Prenda::with(['categoria', 'imgsPrendas', 'condicion'])
+            ->where('usuario_id', $usuarioId);
+        
+        
+        
+        $prendas = $query->get();
+        
+        return view('prendas.mis-publicaciones', compact('prendas', 'categorias'));
     }
 }
