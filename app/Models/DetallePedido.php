@@ -18,7 +18,7 @@ class DetallePedido extends Model
         'pedido_id'
     ];
 
-    public $timestamps = false;
+    
 
     public function prenda()
     {

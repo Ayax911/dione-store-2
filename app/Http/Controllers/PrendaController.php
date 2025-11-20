@@ -263,6 +263,6 @@ class PrendaController extends Controller
         
         $prendas = $query->get();
         
-        return view('prendas.mis-publicaciones', compact('prendas', 'categorias'));
+        return view('mis-publicaciones', compact('prendas', 'categorias'));
     }
 }

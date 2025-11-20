@@ -27,7 +27,7 @@ class PedidoController extends Controller
             ->orderBy('fecha', 'desc')
             ->get();
         
-        return view('pedidos.mis-compras', compact('compras'));
+        return view('mis-compras', compact('compras'));
     }
 
     /**
@@ -66,7 +66,7 @@ class PedidoController extends Controller
         
         $ventas = $query->get()->groupBy('pedido_id');
         
-        return view('pedidos.mis-ventas', compact('ventas'));
+        return view('mis-ventas', compact('ventas'));
     }
 
     /**
@@ -99,6 +99,6 @@ class PedidoController extends Controller
             return redirect()->route('home')->with('error', 'No tienes permiso para ver este pedido.');
         }
 
-        return view('pedidos.detalle', compact('pedido', 'esComprador', 'esVendedor'));
+        return view('detalle-pedido', compact('pedido', 'esComprador', 'esVendedor'));
     }
 }
