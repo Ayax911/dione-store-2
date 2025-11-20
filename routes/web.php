@@ -21,19 +21,20 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Rutas públicas de prendas
 Route::get('/home', [PrendaController::class, 'index'])->name('home');
-Route::get('/prendas/{id}', [PrendaController::class, 'show'])->name('prendas.show');
 
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth')->group(function () {
-    // CRUD de prendas
+    // ✅ CRÍTICO: Rutas específicas ANTES de rutas con parámetros
     Route::get('/prendas/crear', [PrendaController::class, 'create'])->name('prendas.create');
+    
+    // Mis publicaciones (específica antes de {id})
+    Route::get('/mis-publicaciones', [PrendaController::class, 'misPublicaciones'])->name('mis-publicaciones');
+    
+    // CRUD de prendas (rutas con {id} AL FINAL)
     Route::post('/prendas', [PrendaController::class, 'store'])->name('prendas.store');
     Route::get('/prendas/{id}/editar', [PrendaController::class, 'edit'])->name('prendas.edit');
     Route::put('/prendas/{id}', [PrendaController::class, 'update'])->name('prendas.update');
     Route::delete('/prendas/{id}', [PrendaController::class, 'destroy'])->name('prendas.destroy');
-    
-    // Mis publicaciones
-    Route::get('/mis-publicaciones', [PrendaController::class, 'misPublicaciones'])->name('mis-publicaciones');
     
     // Carrito
     Route::post('/carrito/agregar/{prenda}', [CarritoController::class, 'agregar'])->name('carrito.agregar');
@@ -48,3 +49,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/mis-ventas', [PedidoController::class, 'misVentas'])->name('pedidos.misVentas');
     Route::get('/pedido/{id}', [PedidoController::class, 'show'])->name('pedidos.show');
 });
+
+// ✅ Ruta pública de detalle AL FINAL (después de todas las rutas específicas)
+Route::get('/prendas/{id}', [PrendaController::class, 'show'])->name('prendas.show');

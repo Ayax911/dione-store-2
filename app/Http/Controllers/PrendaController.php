@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Prenda;
 use App\Models\User;
 use App\Models\Categoria;
+use App\Models\ImgsPrendas;  // ✅ Importar modelo correcto
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -13,16 +14,15 @@ use Illuminate\Support\Facades\Auth;
 class PrendaController extends Controller
 {
     /**
-     * Display a listing of the resource (HOME PAGE)
+     * HOME PAGE - Catálogo completo
      */
     public function index(Request $request)
     {
         $categorias = Categoria::all();
         
-        // Query base
         $query = Prenda::with(['usuario', 'categoria', 'imgsPrendas', 'condicion', 'huellasCarbonos']);
         
-        // Filtrar por categoría si se proporciona
+        // Filtrar por categoría
         if ($request->has('categoria') && $request->categoria != '') {
             $query->where('categoria_id', $request->categoria);
         }
@@ -42,17 +42,18 @@ class PrendaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Formulario para CREAR prenda
      */
     public function create()
     {
         $categorias = Categoria::all();
         
-        return view('prendas.create', compact('categorias'));
+        // ✅ Vista en raíz de views (SIN carpeta prendas/)
+        return view('create', compact('categorias'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * GUARDAR prenda nueva
      */
     public function store(Request $request)
     {
@@ -73,7 +74,6 @@ class PrendaController extends Controller
         }
 
         try {
-            // Obtener el ID del usuario autenticado
             $usuarioId = Auth::id();
 
             // Crear la prenda
@@ -87,7 +87,7 @@ class PrendaController extends Controller
                 'usuario_id' => $usuarioId
             ]);
 
-            // Guardar imágenes si existen
+            // Guardar imágenes
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $imagen) {
                     $path = $imagen->store('prendas', 'public');
@@ -98,28 +98,25 @@ class PrendaController extends Controller
                 }
             }
 
-            session()->flash('success', 'Prenda publicada exitosamente');
-            return redirect()->route('home');
+            return redirect()->route('home')->with('success', 'Prenda publicada exitosamente');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al crear la prenda: ' . $e->getMessage());
-            return redirect()->back()->withInput();
+            return redirect()->back()->with('error', 'Error al crear la prenda: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * Display the specified resource.
+     * MOSTRAR detalle de prenda
      */
     public function show($id)
     {
         $prenda = Prenda::with(['usuario', 'categoria', 'imgsPrendas', 'condicion', 'huellasCarbonos'])->find($id);
 
         if (!$prenda) {
-            session()->flash('error', 'Prenda no encontrada.');
-            return redirect()->route('home');
+            return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
-        // Productos similares (misma categoría, máximo 4)
+        // Productos similares
         $productosSimilares = Prenda::with(['imgsPrendas', 'categoria'])
             ->where('categoria_id', $prenda->categoria_id)
             ->where('id', '!=', $prenda->id)
@@ -128,50 +125,45 @@ class PrendaController extends Controller
 
         $categorias = Categoria::all();
 
-        return view('prendas.show', compact('prenda', 'productosSimilares', 'categorias'));
+        // ✅ Vista en raíz de views (SIN carpeta prendas/)
+        return view('show', compact('prenda', 'productosSimilares', 'categorias'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Formulario para EDITAR prenda
      */
     public function edit($id)
     {
         $prenda = Prenda::with('imgsPrendas')->find($id);
 
         if (!$prenda) {
-            session()->flash('error', 'Prenda no encontrada.');
-            return redirect()->route('home');
+            return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
-        // Verificar que el usuario sea el dueño - CORRECCIÓN AQUÍ
-        $usuarioId = Auth::id();
-        if ($prenda->usuario_id !== $usuarioId) {
-            session()->flash('error', 'No tienes permiso para editar esta prenda.');
-            return redirect()->route('home');
+        // Verificar permisos
+        if ($prenda->usuario_id !== Auth::id()) {
+            return redirect()->route('home')->with('error', 'No tienes permiso para editar esta prenda.');
         }
 
         $categorias = Categoria::all();
 
-        return view('prendas.edit', compact('prenda', 'categorias'));
+        // ✅ Vista en raíz de views (SIN carpeta prendas/)
+        return view('edit', compact('prenda', 'categorias'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * ACTUALIZAR prenda
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, $id)
     {
         $prenda = Prenda::find($id);
 
         if (!$prenda) {
-            session()->flash('error', 'Prenda no encontrada.');
-            return redirect()->route('home');
+            return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
-        // Verificar que el usuario sea el dueño - CORRECCIÓN AQUÍ
-        $usuarioId = Auth::id();
-        if ($prenda->usuario_id !== $usuarioId) {
-            session()->flash('error', 'No tienes permiso para editar esta prenda.');
-            return redirect()->route('home');
+        if ($prenda->usuario_id !== Auth::id()) {
+            return redirect()->route('home')->with('error', 'No tienes permiso para editar esta prenda.');
         }
 
         $validator = Validator::make($request->all(), [
@@ -181,57 +173,62 @@ class PrendaController extends Controller
             'material' => 'sometimes|string|max:50',
             'titulo' => 'sometimes|string|max:50',
             'categoria_id' => 'sometimes|exists:categorias,id',
-            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'imagenes_eliminar' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         try {
+            // Actualizar datos
             $prenda->update($request->only([
                 'descripcion', 'talla', 'precio', 'material', 'titulo', 'categoria_id'
             ]));
 
-            // Agregar nuevas imágenes si existen
+            // Eliminar imágenes marcadas
+            if ($request->has('imagenes_eliminar') && $request->imagenes_eliminar != '') {
+                $imagenesIds = explode(',', $request->imagenes_eliminar);
+                foreach ($imagenesIds as $imagenId) {
+                    $imagen = ImgsPrendas::find($imagenId);
+                    if ($imagen && $imagen->prenda_id == $prenda->id) {
+                        Storage::disk('public')->delete($imagen->direccion_imagen);
+                        $imagen->delete();
+                    }
+                }
+            }
+
+            // Agregar nuevas imágenes
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $imagen) {
                     $path = $imagen->store('prendas', 'public');
-                    
                     $prenda->imgsPrendas()->create([
                         'direccion_imagen' => $path
                     ]);
                 }
             }
 
-            session()->flash('success', 'Prenda actualizada exitosamente.');
-            return redirect()->route('prendas.show', $prenda->id);
+            return redirect()->route('prendas.show', $prenda->id)->with('success', 'Prenda actualizada exitosamente.');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al actualizar la prenda: ' . $e->getMessage());
-            return redirect()->back()->withInput();
+            return redirect()->back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * ELIMINAR prenda
      */
     public function destroy($id)
     {
         $prenda = Prenda::with('imgsPrendas')->find($id);
 
         if (!$prenda) {
-            session()->flash('error', 'Prenda no encontrada.');
-            return redirect()->route('home');
+            return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
-        // Verificar que el usuario sea el dueño - CORRECCIÓN AQUÍ
-        $usuarioId = Auth::id();
-        if ($prenda->usuario_id !== $usuarioId) {
-            session()->flash('error', 'No tienes permiso para eliminar esta prenda.');
-            return redirect()->route('home');
+        if ($prenda->usuario_id !== Auth::id()) {
+            return redirect()->route('home')->with('error', 'No tienes permiso para eliminar esta prenda.');
         }
 
         try {
@@ -242,15 +239,16 @@ class PrendaController extends Controller
 
             $prenda->delete();
 
-            session()->flash('success', 'Prenda eliminada exitosamente.');
-            return redirect()->route('home');
+            return redirect()->route('mis-publicaciones')->with('success', 'Prenda eliminada exitosamente.');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al eliminar la prenda: ' . $e->getMessage());
-            return redirect()->back();
+            return redirect()->back()->with('error', 'Error al eliminar: ' . $e->getMessage());
         }
     }
 
+    /**
+     * MIS PUBLICACIONES
+     */
     public function misPublicaciones(Request $request)
     {
         $usuarioId = Auth::id();
@@ -259,7 +257,26 @@ class PrendaController extends Controller
         $query = Prenda::with(['categoria', 'imgsPrendas', 'condicion'])
             ->where('usuario_id', $usuarioId);
         
+        // Filtro por categoría
+        if ($request->has('categoria') && $request->categoria != '') {
+            $query->where('categoria_id', $request->categoria);
+        }
         
+        // Ordenamiento
+        switch ($request->get('orden', 'reciente')) {
+            case 'antiguo':
+                $query->oldest('created_at');
+                break;
+            case 'precio_alto':
+                $query->orderBy('precio', 'desc');
+                break;
+            case 'precio_bajo':
+                $query->orderBy('precio', 'asc');
+                break;
+            default:
+                $query->latest('created_at');
+                break;
+        }
         
         $prendas = $query->get();
         
