@@ -61,7 +61,7 @@
                 <small class="text-muted">Máximo 50 caracteres</small>
             </div>
 
-            <!-- Categoría, Talla y Precio -->
+            <!-- Categoria, Talla y Precio -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label for="categoria_id" class="form-label">
@@ -124,7 +124,7 @@
                 <small class="text-muted">Describe el material principal de la prenda</small>
             </div>
 
-            <!-- Descripción -->
+            <!-- Descripcion -->
             <div class="mb-4">
                 <label for="descripcion" class="form-label">
                     <i class="bi bi-card-text"></i> Descripción *
@@ -198,7 +198,7 @@
             </div>
         </form>
 
-        <!-- Botón para Eliminar Prenda -->
+        <!-- Boton para Eliminar Prenda -->
         <div class="mt-4 pt-4" style="border-top: 2px solid #dee2e6;">
             <h5 style="color: #d63031;">
                 <i class="bi bi-exclamation-triangle-fill"></i> Zona de Peligro
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Preview de nuevas imágenes
+// Preview de nuevas imagenes
 function previewImages(event) {
     const files = Array.from(event.target.files);
     selectedFiles = [...selectedFiles, ...files];
@@ -273,7 +273,7 @@ function removeImage(index) {
     previewImages(event);
 }
 
-// Eliminar imágenes existentes
+// Eliminar imagenes existentes
 function eliminarImagen(imagenId) {
     if (confirm('¿Estás seguro de eliminar esta imagen?')) {
         // Ocultar visualmente
@@ -299,8 +299,8 @@ document.getElementById('descripcion').addEventListener('input', function() {
 
 // Confirmar eliminación de prenda
 function confirmarEliminacion() {
-    if (confirm('⚠️ ¿Estás COMPLETAMENTE seguro de eliminar esta prenda?\n\nEsta acción NO se puede deshacer.')) {
-        if (confirm('✋ Última confirmación: ¿Realmente deseas eliminar "{{ $prenda->titulo }}"?')) {
+    if (confirm(' ¿Estás COMPLETAMENTE seguro de eliminar esta prenda?\n\nEsta acción NO se puede deshacer.')) {
+        if (confirm(' Última confirmación: ¿Realmente deseas eliminar "{{ $prenda->titulo }}"?')) {
             document.getElementById('form-eliminar').submit();
         }
     }
