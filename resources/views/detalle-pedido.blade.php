@@ -220,7 +220,7 @@
         </div>
     </div>
 
-    <!-- Botones de Acción -->
+    <!-- Botones de Accion -->
     <div class="d-flex gap-3 justify-content-center flex-wrap" style="margin-top: 2rem;">
         @if($esComprador ?? false)
         <a href="{{ route('pedidos.misCompras') }}" class="btn btn-secondary" style="border-radius: 50px; padding: 0.75rem 2rem;">

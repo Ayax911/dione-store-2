@@ -1,5 +1,36 @@
 <?php
 
+/**
+ * CarritoController
+ *
+ * Controlador responsable de manejar el carrito de compras almacenado en la sesión.
+ *
+ * Propósito:
+ * - Mantener el carrito en `session('carrito')` como un arreglo asociativo indexado por el
+ *   `prenda_id` con datos básicos (id, titulo, precio, cantidad, imagen, categoria, talla,
+ *   vendedor_id, vendedor_nombre).
+ * - Mantener en `session('carrito_count')` el total de unidades del carrito para un contador
+ *   global en la interfaz.
+ * - Proveer operaciones: ver (`index`), agregar (`agregar`), actualizar cantidad
+ *   (`actualizar`), eliminar (`eliminar`), vaciar (`vaciar`) y checkout/creación de pedido
+ *   (`checkout`).
+ *
+ * Uso de session (resumen):
+ * - `session()->get('carrito', [])` — obtener el carrito actual (array vacío si no existe).
+ * - `session()->put('carrito', $carrito)` — guardar el carrito modificado.
+ * - `session()->put('carrito_count', $count)` — actualizar el contador total de ítems.
+ * - `session()->forget('carrito')` — eliminar todo el carrito de la sesión.
+ *
+ * Notas importantes:
+ * - El carrito se gestiona en memoria de sesión y no está normalizado en la base de datos.
+ * - `checkout()` crea un `Pedido` y sus `DetallePedido` a partir del contenido de la sesión
+ *   y luego vacía la sesión.
+ * - Verificar siempre autenticación antes de permitir operaciones de compra y evitar que
+ *   un usuario agregue su propia prenda.
+ *
+
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -10,9 +41,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CarritoController extends Controller
 {
-    /**
-     * Mostrar el carrito de compras
-     */
+   
     public function index()
     {
         $carrito = session()->get('carrito', []);
@@ -26,9 +55,6 @@ class CarritoController extends Controller
         return view('carrito', compact('carrito', 'total'));
     }
 
-    /**
-     * Agregar producto al carrito (SESSION)
-     */
     public function agregar($prenda_id)
     {
         $prenda = Prenda::with(['categoria', 'imgsPrendas', 'usuario'])->find($prenda_id);
@@ -73,9 +99,7 @@ class CarritoController extends Controller
         return redirect()->back()->with('success', '¡Prenda agregada al carrito!');
     }
 
-    /**
-     * Actualizar cantidad de un producto
-     */
+ 
     public function actualizar(Request $request, $prenda_id)
     {
         $carrito = session()->get('carrito', []);
@@ -92,9 +116,7 @@ class CarritoController extends Controller
         return redirect()->back()->with('error', 'Prenda no encontrada en el carrito.');
     }
 
-    /**
-     * Eliminar un producto del carrito
-     */
+  
     public function eliminar($prenda_id)
     {
         $carrito = session()->get('carrito', []);
@@ -110,9 +132,7 @@ class CarritoController extends Controller
         return redirect()->back()->with('error', 'Prenda no encontrada en el carrito.');
     }
 
-    /**
-     * Vaciar todo el carrito
-     */
+ 
     public function vaciar()
     {
         session()->forget('carrito');
@@ -121,10 +141,7 @@ class CarritoController extends Controller
         return redirect()->back()->with('success', 'Carrito vaciado.');
     }
 
-    /**
-     * Procesar la compra (Checkout)
-     * Convierte el carrito de SESSION a PEDIDO en la BD
-     */
+
     public function checkout()
     {
         $carritoSession = session()->get('carrito', []);
@@ -172,9 +189,7 @@ class CarritoController extends Controller
         }
     }
 
-    /**
-     * Actualizar contador del carrito en sesión
-     */
+  
     private function actualizarContador()
     {
         $carrito = session()->get('carrito', []);

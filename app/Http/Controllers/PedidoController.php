@@ -1,5 +1,26 @@
 <?php
 
+/**
+ * PedidoController
+ *
+ * Controlador encargado de gestionar la visualización y el acceso a los pedidos
+ * (tanto compras como ventas) para el usuario autenticado.
+ *
+ * Funcionalidad principal:
+ * - `misCompras()` : lista los pedidos donde el usuario es comprador.
+ * - `misVentas(Request $request)` : lista las ventas (detalles de pedidos) donde el
+ *    usuario es vendedor; soporta filtros/ordenamientos por query string.
+ * - `show($id)` : muestra el detalle de un pedido validando permisos (comprador o vendedor).
+ *
+ * Relaciones cargadas (eager load): `detallesPedidos.prenda.imgsPrendas`, `prenda.usuario`,
+ * `prenda.categoria`, `prenda.condicion`, `pedido.usuario`.
+ *
+ * Notas de seguridad:
+ * - `show()` verifica que el usuario sea el comprador o un vendedor involucrado en el pedido.
+ * - Los métodos asumen que `Auth::id()` está disponible (usuario autenticado).
+ *
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;

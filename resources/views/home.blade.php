@@ -50,7 +50,7 @@
         <input type="text" 
                name="buscar" 
                class="search-input" 
-               placeholder="🔍 Buscar prendas por título o descripción..." 
+               placeholder=" Buscar prendas por título o descripción..." 
                value="{{ request('buscar') }}">
         <button type="submit" class="btn" style="background-color: var(--clr-orange); color: white; border: none; border-radius: 2rem; padding: 0.75rem 2rem; white-space: nowrap;">
             <i class="bi bi-search"></i> Buscar

@@ -40,7 +40,7 @@
         <form action="{{ route('prendas.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <!-- Título -->
+            <!-- Titulo -->
             <div class="mb-4">
                 <label for="titulo" class="form-label">
                     <i class="bi bi-tag-fill"></i> Título de la prenda *
@@ -56,7 +56,7 @@
                 <small class="text-muted">Máximo 50 caracteres</small>
             </div>
 
-            <!-- Categoría, Talla y Precio -->
+            <!-- Categoria, Talla y Precio -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <label for="categoria_id" class="form-label">
@@ -118,7 +118,7 @@
                 <small class="text-muted">Describe el material principal de la prenda</small>
             </div>
 
-            <!-- Descripción -->
+            <!-- Descripcion -->
             <div class="mb-4">
                 <label for="descripcion" class="form-label">
                     <i class="bi bi-card-text"></i> Descripción *
@@ -133,7 +133,7 @@
                 <small class="text-muted">Máximo 500 caracteres - <span id="char-count">0</span>/500</small>
             </div>
 
-            <!-- Upload de Imágenes -->
+            <!-- Upload de Imagenes -->
             <div class="mb-4">
                 <label class="form-label">
                     <i class="bi bi-images"></i> Imágenes de la prenda
@@ -157,7 +157,7 @@
                 <div id="preview-container" class="preview-container"></div>
             </div>
 
-            <!-- Botones de Acción -->
+            <!-- Botones de Accion -->
             <div class="d-flex gap-3 justify-content-end">
                 <a href="{{ route('home') }}" class="btn btn-secondary" style="border-radius: 2rem; padding: 0.75rem 2rem;">
                     <i class="bi bi-x-circle"></i> Cancelar
