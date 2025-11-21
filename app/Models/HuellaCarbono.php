@@ -12,14 +12,14 @@ class HuellaCarbono extends Model
     protected $table = 'huellas_carbonos';
 
     protected $fillable = [
-        'huella_nueva',
-        'huella_reusada',
-        'prenda_id'
-        
+        'prenda_id',
+        'co2_fabricacion',
+        'co2_total_nueva',
+        'co2_segunda_mano',
+        'co2_ahorrado',
+        'porcentaje_ahorro',
+        'categoria_calculo'
     ];
-
-
-    public $timestamps = false;
 
     public function prenda()
     {

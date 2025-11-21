@@ -13,12 +13,20 @@ return new class extends Migration
     {
         Schema::create('huellas_carbonos', function (Blueprint $table) {
             $table->id();
-            $table->decimal('huella_nueva', 10, 4);
-            $table->decimal('huella_reusada', 10, 4);
 
-            
-            $table->foreignId('prenda_id')->references('id')->on('prendas')->onDelete('cascade');
+            $table->decimal('co2_fabricacion', 10, 4)->nullable();
+            $table->decimal('co2_total_nueva', 10, 4)->nullable();
+            $table->decimal('co2_segunda_mano', 10, 4)->nullable();
+            $table->decimal('co2_ahorrado', 10, 4)->nullable();
+            $table->decimal('porcentaje_ahorro', 10, 4)->nullable();
 
+            $table->string('categoria_calculo', 100)->nullable();
+
+            $table->foreignId('prenda_id')
+                ->constrained('prendas')
+                ->onDelete('cascade');
+
+            $table->timestamps();
         });
     }
 
