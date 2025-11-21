@@ -67,8 +67,7 @@ INSERT INTO categorias (tipo_prenda) VALUES
 ('Faldas'),
 ('Ropa Deportiva'),
 ('Accesorios'),
-('Bolsos'),
-('Ropa Interior');
+('Bolsos');
 
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
