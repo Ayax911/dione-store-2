@@ -6,13 +6,51 @@ use Illuminate\Http\Request;
 use App\Models\Prenda;
 use App\Models\User;
 use App\Models\Categoria;
-use App\Models\ImgsPrendas;  // ✅ Importar modelo correcto
+use App\Models\ImgsPrendas;
+use App\Models\HuellaCarbono;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 class PrendaController extends Controller
 {
+    /**
+     * Datos base de CO2 por categoría
+     */
+    private const CO2_POR_CATEGORIA = [
+        'Camisetas' => ['fabricacion' => 7.0],
+        'Blusas' => ['fabricacion' => 6.5],
+        'Pantalones' => ['fabricacion' => 33.4],
+        'Jeans' => ['fabricacion' => 33.4],
+        'Vestidos' => ['fabricacion' => 47.0],
+        'Chaquetas' => ['fabricacion' => 50.0],
+        'Abrigos' => ['fabricacion' => 65.0],
+        'Zapatos' => ['fabricacion' => 14.0],
+        'Zapatillas' => ['fabricacion' => 13.6],
+        'Botas' => ['fabricacion' => 18.0],
+        'Faldas' => ['fabricacion' => 15.0],
+        'Ropa Deportiva' => ['fabricacion' => 9.0],
+        'Accesorios' => ['fabricacion' => 3.0],
+        'Bolsos' => ['fabricacion' => 12.0],
+        'Ropa Interior' => ['fabricacion' => 2.5],
+    ];
+
+    /**
+     * Factores por material
+     */
+    private const FACTOR_MATERIAL = [
+        'Algodón orgánico' => 0.7,
+        'Lino' => 0.8,
+        'Algodón' => 1.0,
+        'Poliéster' => 1.3,
+        'Nylon' => 1.4,
+        'Lana' => 1.5,
+        'Seda' => 1.2,
+        'Mezclilla' => 1.1,
+        'Cuero' => 2.0,
+        'Sintético' => 1.3,
+    ];
+
     /**
      * HOME PAGE - Catálogo completo
      */
@@ -22,12 +60,10 @@ class PrendaController extends Controller
         
         $query = Prenda::with(['usuario', 'categoria', 'imgsPrendas', 'condicion', 'huellasCarbonos']);
         
-        // Filtrar por categoría
         if ($request->has('categoria') && $request->categoria != '') {
             $query->where('categoria_id', $request->categoria);
         }
         
-        // Búsqueda por texto
         if ($request->has('buscar') && $request->buscar != '') {
             $buscar = $request->buscar;
             $query->where(function($q) use ($buscar) {
@@ -47,13 +83,11 @@ class PrendaController extends Controller
     public function create()
     {
         $categorias = Categoria::all();
-        
-        // ✅ Vista en raíz de views (SIN carpeta prendas/)
         return view('create', compact('categorias'));
     }
 
     /**
-     * GUARDAR prenda nueva
+     * GUARDAR prenda nueva + CALCULAR HUELLA
      */
     public function store(Request $request)
     {
@@ -91,14 +125,18 @@ class PrendaController extends Controller
             if ($request->hasFile('imagenes')) {
                 foreach ($request->file('imagenes') as $imagen) {
                     $path = $imagen->store('prendas', 'public');
-                    
                     $prenda->imgsPrendas()->create([
                         'direccion_imagen' => $path
                     ]);
                 }
             }
 
-            return redirect()->route('home')->with('success', 'Prenda publicada exitosamente');
+            // CALCULAR HUELLA DE CARBONO
+            $huella = $this->calcularHuellaCarbono($prenda);
+
+            return redirect()->route('home')->with('success', 
+                'Prenda publicada exitosamente. Impacto ambiental: ' . number_format($huella->co2_ahorrado, 1) . ' kg CO2 ahorrados'
+            );
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al crear la prenda: ' . $e->getMessage())->withInput();
@@ -116,6 +154,14 @@ class PrendaController extends Controller
             return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
+        // Si no tiene huella, calcularla
+        if ($prenda->huellasCarbonos->isEmpty()) {
+            $this->calcularHuellaCarbono($prenda);
+            $prenda->load('huellasCarbonos');
+        }
+
+        $huella = $prenda->huellasCarbonos->first();
+
         // Productos similares
         $productosSimilares = Prenda::with(['imgsPrendas', 'categoria'])
             ->where('categoria_id', $prenda->categoria_id)
@@ -123,10 +169,16 @@ class PrendaController extends Controller
             ->take(4)
             ->get();
 
+        if ($prenda->huellasCarbonos->isEmpty()) {
+            $this->calcularHuellaCarbono($prenda);
+            $prenda->load('huellasCarbonos');
+        }
+
+        $huella = $prenda->huellasCarbonos->first();
+
         $categorias = Categoria::all();
 
-        // ✅ Vista en raíz de views (SIN carpeta prendas/)
-        return view('show', compact('prenda', 'productosSimilares', 'categorias'));
+        return view('show', compact('prenda', 'productosSimilares', 'categorias', 'huella'));
     }
 
     /**
@@ -140,14 +192,11 @@ class PrendaController extends Controller
             return redirect()->route('home')->with('error', 'Prenda no encontrada.');
         }
 
-        // Verificar permisos
         if ($prenda->usuario_id !== Auth::id()) {
             return redirect()->route('home')->with('error', 'No tienes permiso para editar esta prenda.');
         }
 
         $categorias = Categoria::all();
-
-        // ✅ Vista en raíz de views (SIN carpeta prendas/)
         return view('edit', compact('prenda', 'categorias'));
     }
 
@@ -182,7 +231,6 @@ class PrendaController extends Controller
         }
 
         try {
-            // Actualizar datos
             $prenda->update($request->only([
                 'descripcion', 'talla', 'precio', 'material', 'titulo', 'categoria_id'
             ]));
@@ -209,6 +257,11 @@ class PrendaController extends Controller
                 }
             }
 
+            // Recalcular huella si cambió material o categoría
+            if ($request->has('material') || $request->has('categoria_id')) {
+                $this->calcularHuellaCarbono($prenda);
+            }
+
             return redirect()->route('prendas.show', $prenda->id)->with('success', 'Prenda actualizada exitosamente.');
 
         } catch (\Exception $e) {
@@ -232,7 +285,6 @@ class PrendaController extends Controller
         }
 
         try {
-            // Eliminar imágenes del storage
             foreach ($prenda->imgsPrendas as $imagen) {
                 Storage::disk('public')->delete($imagen->direccion_imagen);
             }
@@ -254,15 +306,13 @@ class PrendaController extends Controller
         $usuarioId = Auth::id();
         $categorias = Categoria::all();
         
-        $query = Prenda::with(['categoria', 'imgsPrendas', 'condicion'])
+        $query = Prenda::with(['categoria', 'imgsPrendas', 'condicion', 'huellasCarbonos'])
             ->where('usuario_id', $usuarioId);
         
-        // Filtro por categoría
         if ($request->has('categoria') && $request->categoria != '') {
             $query->where('categoria_id', $request->categoria);
         }
         
-        // Ordenamiento
         switch ($request->get('orden', 'reciente')) {
             case 'antiguo':
                 $query->oldest('created_at');
@@ -280,6 +330,95 @@ class PrendaController extends Controller
         
         $prendas = $query->get();
         
-        return view('mis-publicaciones', compact('prendas', 'categorias'));
+        // Calcular impacto personal
+        $impactoPersonal = $this->calcularImpactoUsuario($usuarioId);
+        
+        return view('mis-publicaciones', compact('prendas', 'categorias', 'impactoPersonal'));
     }
+
+    /**
+     * MÉTODO PRIVADO: Calcular huella de carbono
+     */
+    private function calcularHuellaCarbono(Prenda $prenda)
+    {
+        // Obtener categoría
+        $categoria = $prenda->categoria->tipo_prenda ?? 'default';
+        $co2Base = self::CO2_POR_CATEGORIA[$categoria]['fabricacion'] ?? 15.0;
+
+        // Factor de material
+        $material = ucfirst(strtolower(trim($prenda->material)));
+        $factorMaterial = self::FACTOR_MATERIAL[$material] ?? 1.0;
+        
+        // Buscar coincidencia parcial si no hay exacta
+        if ($factorMaterial === 1.0) {
+            foreach (self::FACTOR_MATERIAL as $key => $factor) {
+                if (stripos($material, $key) !== false) {
+                    $factorMaterial = $factor;
+                    break;
+                }
+            }
+        }
+
+        // 1. CO2 de fabricación
+        $co2Fabricacion = $co2Base * $factorMaterial;
+
+        // 2. Transporte (20% de fabricación)
+        $co2Transporte = $co2Fabricacion * 0.2;
+
+        // 3. Total prenda nueva
+        $co2TotalNuevo = $co2Fabricacion + $co2Transporte;
+
+        // 4. Segunda mano (15% del total)
+        $co2SegundaMano = $co2TotalNuevo * 0.15;
+
+        // 5. CO2 ahorrado
+        $co2Ahorrado = $co2TotalNuevo - $co2SegundaMano;
+
+        // 6. Porcentaje
+        $porcentajeAhorro = ($co2Ahorrado / $co2TotalNuevo) * 100;
+
+        // Crear o actualizar
+        return HuellaCarbono::updateOrCreate(
+            ['prenda_id' => $prenda->id],
+            [
+                'co2_fabricacion' => round($co2Fabricacion, 2),
+                'co2_total_nueva' => round($co2TotalNuevo, 2),
+                'co2_segunda_mano' => round($co2SegundaMano, 2),
+                'co2_ahorrado' => round($co2Ahorrado, 2),
+                'porcentaje_ahorro' => round($porcentajeAhorro, 2),
+                'categoria_calculo' => $categoria
+            ]
+        );
+    }
+
+    /**
+     * MÉTODO PRIVADO: Calcular impacto del usuario
+     */
+    private function calcularImpactoUsuario($usuarioId)
+    {
+        $prendas = Prenda::where('usuario_id', $usuarioId)
+            ->with('huellasCarbonos')
+            ->get();
+
+        $totalCO2 = $prendas->sum(function($prenda) {
+            return optional($prenda->huellasCarbonos->first())->co2_ahorrado ?? 0;
+        });
+
+        $totalPrendas = $prendas->count();
+
+        return [
+            'total_co2_ahorrado' => round($totalCO2, 2),
+            'total_prendas' => $totalPrendas,
+            'promedio_por_prenda' => $totalPrendas > 0 ? round($totalCO2 / $totalPrendas, 2) : 0
+        ];
+
+
+        
+
+
+        
+    }
+
+
+    
 }

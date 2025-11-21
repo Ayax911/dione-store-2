@@ -155,9 +155,19 @@
     </div>
 </div>
 
-{{-- ✅ COMPONENTE DE HUELLA DE CARBONO --}}
+
+{{-- Componente de Huella de Carbono --}}
 @if(isset($huella))
-    @include('components.huella-carbono', ['huella' => $huella, 'prenda' => $prenda])
+    @include('components.huella-carbono-simple', ['huella' => $huella, 'prenda' => $prenda])
+@endif
+
+
+
+<h1>Mis Publicaciones</h1>
+
+{{-- Componente de Impacto Personal --}}
+@if(isset($impactoPersonal))
+    @include('components.impacto-personal-simple', ['impacto' => $impactoPersonal])
 @endif
 
 <!-- Productos Similares -->
@@ -231,3 +241,4 @@
 </script>
 @endif
 @endsection
+
