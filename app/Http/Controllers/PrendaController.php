@@ -35,9 +35,7 @@ class PrendaController extends Controller
         'Ropa Interior' => ['fabricacion' => 2.5],
     ];
 
-    /**
-     * Factores por material
-     */
+    
     private const FACTOR_MATERIAL = [
         'Algodón orgánico' => 0.7,
         'Lino' => 0.8,
